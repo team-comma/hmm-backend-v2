@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  database:
+    container_name: hmm
+    image: mariadb:latest
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+      MARIADB_DATABASE: hmm-db
+      TZ: Asia/Seoul
+    ports:
+      - 3308:3306
