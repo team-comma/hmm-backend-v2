@@ -2,12 +2,27 @@ version: '3'
 
 services:
   database:
-    container_name: hmm
+    container_name: hmm_db
     image: mariadb:latest
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: password
-      MARIADB_DATABASE: hmm-db
+      MARIADB_DATABASE: hmm
       TZ: Asia/Seoul
     ports:
       - 3308:3306
+    networks:
+      - hmm
+
+  redis:
+    container_name: hmm_caches
+    image: redis:latest
+    restart: always
+    ports:
+      - 6308:6379
+    networks:
+      - hmm
+
+networks:
+  hmm:
+    driver: bridge
