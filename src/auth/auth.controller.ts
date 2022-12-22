@@ -1,10 +1,9 @@
-import { Controller, Get, Ip, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller, Get, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { Member } from 'src/entities';
-import { RESPONSE_CODE } from 'src/libs/constants';
 import { AuthService } from './auth.service';
 import { MemberKakaoDto } from './dto';
-import { KakaoAuthGuard, RefreshTokenAuthGuard } from './guards';
+import { AccessTokenAuthGuard, KakaoAuthGuard, RefreshTokenAuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
@@ -12,8 +11,8 @@ export class AuthController {
 
   @UseGuards(KakaoAuthGuard)
   @Get('/login/oauth/kakao')
-  public login(@Req() req: Request, @Ip() ip: string) {
-    return this.authService.register(req.user as MemberKakaoDto, ip);
+  public login(@Req() req: Request, @Ip() ip: string, @Res() res: Response) {
+    return this.authService.register(req.user as MemberKakaoDto, ip, res);
   }
 
   @UseGuards(RefreshTokenAuthGuard)
@@ -22,13 +21,9 @@ export class AuthController {
     return this.authService.issueAccessTokenByRefreshToken(req.user as Member);
   }
 
-  @Post('logout/:id')
-  public logout(@Param('id') userId: string) {
-    return this.authService.logout(userId);
-  }
-
-  @Get('test')
-  public test() {
-    return { result: RESPONSE_CODE.OK };
+  @UseGuards(AccessTokenAuthGuard)
+  @Post('logout')
+  public logout(@Req() req: Request) {
+    return this.authService.logout(req.user as Member);
   }
 }

@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Response } from 'express';
 import { CachesService } from 'src/caches/caches.service';
 import { Member } from 'src/entities';
 import { RESPONSE_CODE } from 'src/libs/constants';
@@ -26,7 +27,7 @@ export class AuthService {
     private readonly cachesService: CachesService,
   ) {}
 
-  public async register(user: MemberKakaoDto, ip: string) {
+  public async register(user: MemberKakaoDto, ip: string, res: Response) {
     try {
       const { socialId, email } = user;
       const isMemberExist = await this.membersService.getMemberBySocialIdAndEmail(socialId, email);
@@ -38,9 +39,9 @@ export class AuthService {
           birthday: user.birthday,
           image: user.image,
         });
-        return await this.login(member, ip);
+        return await this.login(member, ip, res);
       } else {
-        return await this.login(isMemberExist, ip);
+        return await this.login(isMemberExist, ip, res);
       }
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -48,12 +49,12 @@ export class AuthService {
     }
   }
 
-  private async login(member: Member, ip: string) {
+  private async login(member: Member, ip: string, res: Response) {
     try {
       member.lastLoginAt = new Date();
       member.lastLoginIp = ip;
       await this.memberRepository.save(member);
-      const { id, name, isMoreInfo } = member;
+      const { id, isMoreInfo } = member;
       const accessToken = this.issueToken({ id }, true);
       const refreshToken = this.issueToken({ id }, false);
       this.cachesService.del(id);
@@ -62,7 +63,12 @@ export class AuthService {
         await this.hash(refreshToken),
         parseInt(await this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRES_IN'), 10),
       );
-      return { code: RESPONSE_CODE.OK, result: { name, accessToken, refreshToken, isMoreInfo } };
+      res.redirect(
+        `${this.configService.get<string>(
+          'HMM_FRONT_HOST',
+        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}`,
+      );
+      return { code: RESPONSE_CODE.OK };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(RESPONSE_CODE.INTERNAL_SERVER_ERROR);
@@ -103,8 +109,8 @@ export class AuthService {
     return { code: RESPONSE_CODE.OK, result: accessToken };
   }
 
-  public async logout(userId: string) {
-    await this.cachesService.del(userId);
+  public async logout(member: Member) {
+    await this.cachesService.del(member.id);
     return { code: RESPONSE_CODE.OK };
   }
 }
