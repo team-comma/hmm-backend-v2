@@ -43,7 +43,6 @@ export class AuthService {
         return await this.login(isMemberExist, ip);
       }
     } catch (error) {
-      console.log(error);
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('일시적인 오류가 발생했어요');
     }
@@ -78,7 +77,6 @@ export class AuthService {
   public async validateRefreshToken(refreshToken: string, id: string) {
     const member = await this.membersService.getMemberById(id);
     const currentHashedRefreshToken: string = (await this.cachesService.get(id)) ?? 'null';
-    console.log(currentHashedRefreshToken);
     if (member && (await bcrypt.compare(refreshToken, currentHashedRefreshToken))) {
       return member;
     } else {
