@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from 'src/entities';
+import { RESPONSE_CODE } from 'src/libs/constants';
 import { Repository } from 'typeorm';
+import { UpdateMemberDto } from './dto/update-member.dto';
 
 @Injectable()
 export class MembersService {
@@ -18,5 +25,15 @@ export class MembersService {
 
   public async getMemberBySocialIdAndEmail(id: string, email: string) {
     return await this.memberRepository.findOne({ where: { socialId: id, email: email } });
+  }
+
+  public async updateMemberById(id: string, updateMemberDto: UpdateMemberDto) {
+    try {
+      const member = await this.memberRepository.update(id, updateMemberDto);
+      return { code: RESPONSE_CODE.OK, result: member };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException(RESPONSE_CODE.INTERNAL_SERVER_ERROR);
+    }
   }
 }
