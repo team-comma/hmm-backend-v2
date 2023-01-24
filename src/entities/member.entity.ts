@@ -37,8 +37,11 @@ export class Member extends BaseEntity {
   @Column({ type: 'varchar', name: 'blacklist_reason', default: null, nullable: true })
   blacklistReason: string | null;
 
-  @Column({ type: 'int', precision: 4, default: null, nullable: true })
-  birthday: number | null;
+  @Column({ type: 'varchar', default: null, nullable: true })
+  birthyear: string | null;
+
+  @Column({ type: 'varchar', default: null, nullable: true })
+  birthday: string | null;
 
   @Column({ type: 'tinyint', name: 'is_more_info', default: 0 })
   isMoreInfo: boolean;
