@@ -7,8 +7,12 @@ import { Member } from 'src/entities';
 import { MembersModule } from 'src/members/members.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
-import { KakaoStrategy } from './strategies/kakao.strategy';
+import {
+  AccessTokenStrategy,
+  KakaoStrategy,
+  NaverStrategy,
+  RefreshTokenStrategy,
+} from './strategies';
 
 @Module({
   imports: [
@@ -29,7 +33,7 @@ import { KakaoStrategy } from './strategies/kakao.strategy';
     CachesModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, KakaoStrategy, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [AuthService, KakaoStrategy, NaverStrategy, AccessTokenStrategy, RefreshTokenStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
