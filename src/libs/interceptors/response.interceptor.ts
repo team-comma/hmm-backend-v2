@@ -1,10 +1,8 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Request } from 'express';
 import { map, Observable } from 'rxjs';
-import { RESPONSE_CODE } from '../constants';
 
 export interface Response<T> {
-  code: RESPONSE_CODE;
   result: T;
 }
 
@@ -18,9 +16,10 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     if (allowPath.includes(request.url)) return next.handle().pipe();
 
     return next.handle().pipe(
-      map((data) => ({
-        code: data.code ?? RESPONSE_CODE.OK,
-        result: data.result ?? null,
+      map((result) => ({
+        status: 'SUCCESS',
+        message: '',
+        result: result ?? null,
       })),
     );
   }

@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-naver-v2';
+import { AuthService } from '../auth.service';
+import { RequestMemberLoginDto } from '../dto';
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+  ) {
     super({
       clientID: configService.get<string>('NAVER_CLIENT_ID'),
       clientSecret: configService.get<string>('NAVER_CLIENT_SECRET'),
@@ -27,14 +32,20 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
       birthYear,
       birthday,
     } = profile;
-    console.log(provider, nickname, age, gender, mobile, birthYear);
-    const payload = {
+    const payload: RequestMemberLoginDto = {
+      socialType: provider,
       socialId: id,
       name: name,
-      image: profileImage,
+      nickname: nickname,
       email: email,
+      mobile: mobile,
+      image: profileImage,
+      birthyear: birthYear,
       birthday: birthday,
+      age: age,
+      gender: gender,
     };
-    done(null, payload);
+    const member = await this.authService.createMember(payload);
+    return done(null, member);
   }
 }

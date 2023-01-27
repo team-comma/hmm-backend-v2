@@ -1,4 +1,4 @@
-import { STUDENT_DEPARTMENT } from 'src/libs/constants';
+import { STUDENT_DEPARTMENT } from '@src/libs/constants';
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
@@ -17,19 +17,22 @@ export class Member extends BaseEntity {
   email: string;
 
   @Column({ type: 'varchar' })
+  mobile: string;
+
+  @Column({ type: 'varchar' })
   image: string;
 
   @Column({ type: 'enum', enum: STUDENT_DEPARTMENT, default: null, nullable: true })
   department: STUDENT_DEPARTMENT | null;
 
-  @Column({ type: 'int', precision: 1, default: null, nullable: true })
-  grade: number | null;
+  @Column({ type: 'varchar', default: null, nullable: true })
+  grade: string | null;
 
-  @Column({ type: 'int', precision: 1, default: null, nullable: true })
-  class: number | null;
+  @Column({ type: 'varchar', default: null, nullable: true })
+  class: string | null;
 
-  @Column({ type: 'int', precision: 2, default: null, nullable: true })
-  number: number | null;
+  @Column({ type: 'varchar', default: null, nullable: true })
+  number: string | null;
 
   @Column({ type: 'tinyint', name: 'is_blacklist', default: 0 })
   isBlacklist: boolean;
@@ -43,8 +46,20 @@ export class Member extends BaseEntity {
   @Column({ type: 'varchar', default: null, nullable: true })
   birthday: string | null;
 
+  @Column({ type: 'varchar' })
+  age: string;
+
+  @Column({ type: 'varchar' })
+  gender: string;
+
+  @Column({ type: 'varchar', name: 'social_type' })
+  socialType: string;
+
   @Column({ type: 'tinyint', name: 'is_more_info', default: 0 })
   isMoreInfo: boolean;
+
+  @Column({ type: 'tinyint', name: 'is_student', default: 0 })
+  isStudent: boolean;
 
   @Column({
     type: 'timestamp',

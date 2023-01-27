@@ -1,20 +1,16 @@
-import {
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CachesService } from '@src/caches/caches.service';
+import { Member } from '@src/entities';
+import { checkIsStudent } from '@src/libs/utils';
+import { MemberInfoDto } from '@src/members/dto';
+import { MembersService } from '@src/members/members.service';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
-import { CachesService } from 'src/caches/caches.service';
-import { Member } from 'src/entities';
-import { RESPONSE_CODE } from 'src/libs/constants';
-import { MembersService } from 'src/members/members.service';
 import { Repository } from 'typeorm';
-import { MemberKakaoDto } from './dto';
+import { RequestMemberLoginDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -27,51 +23,69 @@ export class AuthService {
     private readonly cachesService: CachesService,
   ) {}
 
-  public async register(user: MemberKakaoDto, ip: string, res: Response) {
+  public async createMember(requestMemberLoginDto: RequestMemberLoginDto) {
     try {
-      const { socialId, email } = user;
+      const {
+        socialType,
+        socialId,
+        name,
+        nickname,
+        email,
+        mobile,
+        image,
+        birthyear,
+        birthday,
+        age,
+        gender,
+      } = requestMemberLoginDto;
+
       const isMemberExist = await this.membersService.getMemberBySocialIdAndEmail(socialId, email);
-      if (!isMemberExist) {
-        const member = await this.memberRepository.create({
-          socialId: user.socialId,
-          name: user.name,
-          email: user.email,
-          birthday: user.birthday,
-          image: user.image,
-        });
-        return await this.login(member, ip, res);
-      } else {
-        return await this.login(isMemberExist, ip, res);
-      }
+      if (isMemberExist) return isMemberExist;
+
+      const member = await this.memberRepository.create({
+        socialType: socialType,
+        socialId: socialId,
+        email: email,
+        mobile: mobile,
+        name: name,
+        nickname: nickname,
+        image: image,
+        birthyear: birthyear,
+        birthday: birthday,
+        age: age,
+        gender: gender,
+        isStudent: checkIsStudent(parseInt(birthyear)),
+      });
+      await this.memberRepository.save(member);
+      return member;
     } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException('일시적인 오류가 발생했어요');
+      throw error;
     }
   }
 
-  private async login(member: Member, ip: string, res: Response) {
+  public async successLoginHandler(member: MemberInfoDto, ip: string, res: Response) {
     try {
-      member.lastLoginAt = new Date();
-      member.lastLoginIp = ip;
-      await this.memberRepository.save(member);
-      const { id, isMoreInfo } = member;
-      const accessToken = this.issueToken({ id }, true);
-      const refreshToken = this.issueToken({ id }, false);
+      const { id, isMoreInfo, isStudent } = member;
+      await this.memberRepository.update(id, { lastLoginAt: new Date(), lastLoginIp: ip });
+      const accessToken = await this.issueToken(id, true);
+      const refreshToken = await this.issueToken(id, false);
+
       this.cachesService.del(id);
       this.cachesService.set(
         id,
         await this.hash(refreshToken),
         parseInt(await this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRES_IN'), 10),
       );
+      console.log(accessToken);
+      console.log(refreshToken);
+
       res.redirect(
-        `${this.configService.get<string>(
+        `${await this.configService.get<string>(
           'HMM_FRONT_HOST',
-        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}`,
+        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}&isStudent=${isStudent}`,
       );
-      return { code: RESPONSE_CODE.OK };
     } catch (error) {
-      if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException(RESPONSE_CODE.INTERNAL_SERVER_ERROR);
+      throw error;
     }
   }
 
@@ -83,6 +97,7 @@ export class AuthService {
   public async validateRefreshToken(refreshToken: string, id: string) {
     const member = await this.membersService.getMemberById(id);
     const currentHashedRefreshToken: string = (await this.cachesService.get(id)) ?? 'null';
+
     if (member && (await bcrypt.compare(refreshToken, currentHashedRefreshToken))) {
       return member;
     } else {
@@ -90,7 +105,7 @@ export class AuthService {
     }
   }
 
-  private issueToken(payload: { id: string }, isAccessToken: boolean) {
+  private issueToken(id: string, isAccessToken: boolean) {
     const secret = this.configService.get<string>(
       isAccessToken ? 'JWT_ACCESS_TOKEN_SECRET_KEY' : 'JWT_REFRESH_TOKEN_SECRET_KEY',
     );
@@ -100,17 +115,17 @@ export class AuthService {
       ),
     );
 
-    const token = this.jwtService.sign({ sub: payload.id }, { secret, expiresIn });
+    const token = this.jwtService.sign({ sub: id }, { secret, expiresIn });
     return token;
   }
 
-  public async issueAccessTokenByRefreshToken(member: Member) {
-    const accessToken = this.issueToken({ id: member.id }, true);
-    return { code: RESPONSE_CODE.OK, result: accessToken };
+  public async reissueAccessTokenByRefreshToken(memberId: string) {
+    const accessToken = this.issueToken(memberId, true);
+    return accessToken;
   }
 
-  public async logout(member: Member) {
-    await this.cachesService.del(member.id);
-    return { code: RESPONSE_CODE.OK };
+  public async logout(memberId: string) {
+    await this.cachesService.del(memberId);
+    return;
   }
 }
