@@ -1,1 +1,1 @@
-export * from './checkIsStudent';
+export * from './check-is-student';
