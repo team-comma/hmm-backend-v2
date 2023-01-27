@@ -23,7 +23,7 @@ export class ValidationPipe implements PipeTransform<any> {
 
   async transform(value, metadata: ArgumentMetadata) {
     if (!value) {
-      throw new BadRequestException('제출된 데이터가 없어요');
+      throw new BadRequestException('데이터를 확인할 수 없어요');
     }
 
     const { metatype, type } = metadata;
