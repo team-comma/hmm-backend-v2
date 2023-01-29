@@ -5,7 +5,7 @@ import { MemberInfoDto } from '@src/members/dto';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ResponseReissueAccessToken } from './dto';
-import { AccessTokenAuthGuard, NaverAuthGuard, RefreshTokenAuthGuard } from './guards';
+import { NaverAuthGuard, RefreshTokenAuthGuard } from './guards';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -39,7 +39,6 @@ export class AuthController {
 
   @ApiOperation({ summary: '로그아웃 API', description: '유저가 로그아웃을 한다' })
   @ApiBearerAuth('access-token')
-  @UseGuards(AccessTokenAuthGuard)
   @Post('logout')
   public logout(@GetMember('id') memberId: string) {
     return this.authService.logout(memberId);

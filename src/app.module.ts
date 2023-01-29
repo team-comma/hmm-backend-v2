@@ -81,6 +81,6 @@ export class AppModule implements NestModule {
         { path: 'api/auth/login/naver', method: RequestMethod.GET },
         { path: 'api/auth/token/refresh', method: RequestMethod.GET },
       )
-      .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

@@ -1,4 +1,5 @@
 import { STUDENT_DEPARTMENT } from '@src/libs/constants';
+import { ROLE } from '@src/libs/constants/role';
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
@@ -58,8 +59,8 @@ export class Member extends BaseEntity {
   @Column({ type: 'tinyint', name: 'is_more_info', default: 0 })
   isMoreInfo: boolean;
 
-  @Column({ type: 'tinyint', name: 'is_student', default: 0 })
-  isStudent: boolean;
+  @Column({ type: 'set', enum: ROLE })
+  role: ROLE[];
 
   @Column({
     type: 'timestamp',
