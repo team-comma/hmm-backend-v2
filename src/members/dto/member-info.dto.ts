@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { STUDENT_DEPARTMENT } from '@src/libs/constants';
+import { ROLE } from '@src/libs/constants/role';
 import { BaseDto } from '@src/libs/dto';
 import { Expose } from 'class-transformer';
 import { IsBoolean, IsDate, IsEnum, IsString } from 'class-validator';
@@ -89,9 +90,8 @@ export class MemberInfoDto extends BaseDto {
   @IsBoolean()
   isMoreInfo: boolean;
 
-  @ApiProperty({ description: '학생 유무' })
-  @IsBoolean()
-  isStudent: boolean;
+  @ApiProperty({ description: '역할' })
+  role: ROLE[];
 
   @ApiProperty({ description: '마지막 로그인 한 시간' })
   @IsDate()
