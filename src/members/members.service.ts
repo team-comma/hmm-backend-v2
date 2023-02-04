@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from '@src/entities';
 import { Repository } from 'typeorm';
+import { RequestUpdateMemberInfoDto } from './dto';
 
 @Injectable()
 export class MembersService {
@@ -18,5 +19,16 @@ export class MembersService {
 
   public async getMemberBySocialIdAndEmail(id: string, email: string) {
     return await this.memberRepository.findOne({ where: { socialId: id, email: email } });
+  }
+
+  public async updateMemberInfo(
+    memberId: string,
+    requestUpdateMemberInfoDto: RequestUpdateMemberInfoDto,
+  ) {
+    try {
+      await this.memberRepository.update(memberId, requestUpdateMemberInfoDto);
+    } catch (error) {
+      throw error;
+    }
   }
 }

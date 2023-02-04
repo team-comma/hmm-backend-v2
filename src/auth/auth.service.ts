@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CachesService } from '@src/caches/caches.service';
 import { Member } from '@src/entities';
+import { ROLE } from '@src/libs/constants/role';
 import { checkIsStudent } from '@src/libs/utils';
 import { MemberInfoDto } from '@src/members/dto';
 import { MembersService } from '@src/members/members.service';
@@ -54,7 +55,7 @@ export class AuthService {
         birthday: birthday,
         age: age,
         gender: gender,
-        isStudent: checkIsStudent(parseInt(birthyear)),
+        role: checkIsStudent(birthyear) ? [ROLE.USER] : [ROLE.OUTSIDER],
       });
       await this.memberRepository.save(member);
       return member;
@@ -65,7 +66,7 @@ export class AuthService {
 
   public async successLoginHandler(member: MemberInfoDto, ip: string, res: Response) {
     try {
-      const { id, isMoreInfo, isStudent } = member;
+      const { id, isMoreInfo, birthyear } = member;
       await this.memberRepository.update(id, { lastLoginAt: new Date(), lastLoginIp: ip });
       const accessToken = await this.issueToken(id, true);
       const refreshToken = await this.issueToken(id, false);
@@ -82,7 +83,9 @@ export class AuthService {
       res.redirect(
         `${await this.configService.get<string>(
           'HMM_FRONT_HOST',
-        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}&isStudent=${isStudent}`,
+        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}&isStudent=${checkIsStudent(
+          birthyear,
+        )}`,
       );
     } catch (error) {
       throw error;
