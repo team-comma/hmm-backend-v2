@@ -15,8 +15,7 @@ export class AuthMiddleware implements NestMiddleware {
   ) {}
   async use(req: Request, res: Response, next: NextFunction) {
     if (req?.user) {
-      next();
-      return;
+      return next();
     }
 
     let member;
@@ -27,13 +26,12 @@ export class AuthMiddleware implements NestMiddleware {
         secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET_KEY'),
       });
       member = await this.memberService.getMemberById(sub);
+      if (member) {
+        req.user = member;
+      }
+      next();
     } catch (error) {
       throw new UnauthorizedException();
     }
-
-    if (member) {
-      req.user = member;
-    }
-    next();
   }
 }
