@@ -13,6 +13,8 @@ import { RolesGuard } from './auth/guards';
 import { CachesModule } from './caches/caches.module';
 import { AuthMiddleware } from './libs/middlewares';
 import { MembersModule } from './members/members.module';
+import { SongModule } from './song/song.module';
+import { YoutubeModule } from './youtube/youtube.module';
 
 @Module({
   imports: [
@@ -63,6 +65,8 @@ import { MembersModule } from './members/members.module';
     AuthModule,
     MembersModule,
     CachesModule,
+    SongModule,
+    YoutubeModule,
   ],
   controllers: [AppController],
   providers: [
