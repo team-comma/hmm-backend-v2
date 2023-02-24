@@ -5,7 +5,12 @@ import { MemberInfoDto } from '@src/members/dto';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ResponseReissueAccessToken } from './dto';
-import { NaverAuthGuard, RefreshTokenAuthGuard } from './guards';
+import {
+  AccessTokenAuthGuard,
+  GoogleAuthGuard,
+  NaverAuthGuard,
+  RefreshTokenAuthGuard,
+} from './guards';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -42,5 +47,17 @@ export class AuthController {
   @Post('logout')
   public logout(@GetMember('id') memberId: string) {
     return this.authService.logout(memberId);
+  }
+
+  @ApiOperation({
+    summary: '구글 로그인 API',
+    description: '유저가 유튜브 API를 사용하기 위해 구글 로그인을 한다',
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(GoogleAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
+  @Get('login/google')
+  public googleLogin() {
+    return 'test';
   }
 }

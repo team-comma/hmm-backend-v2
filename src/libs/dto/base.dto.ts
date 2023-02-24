@@ -17,4 +17,9 @@ export class BaseDto {
   @ApiProperty({ description: '수정 일자' })
   @IsDate()
   updatedAt: Date;
+
+  @Exclude()
+  @ApiProperty({ description: '삭제 일자' })
+  @IsDate()
+  deletedAt: Date;
 }

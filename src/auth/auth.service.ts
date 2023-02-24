@@ -8,6 +8,7 @@ import { ROLE } from '@src/libs/constants/role';
 import { checkIsStudent } from '@src/libs/utils';
 import { MemberInfoDto } from '@src/members/dto';
 import { MembersService } from '@src/members/members.service';
+import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { Repository } from 'typeorm';
@@ -140,5 +141,31 @@ export class AuthService {
   public async logout(memberId: string) {
     await this.cachesService.del(memberId);
     return;
+  }
+
+  public async getGoogleAccesToken() {
+    const accessToken = await this.cachesService.get('google-access');
+    const refreshToken = await this.cachesService.get('google-refresh');
+    const test: string = accessToken
+      ? accessToken
+      : await this.reissueGoogleAccessTokenByRefreshToken(refreshToken);
+    return test;
+  }
+
+  private async reissueGoogleAccessTokenByRefreshToken(refreshToken: string) {
+    try {
+      const {
+        data: { access_token },
+      } = await axios.post('https://oauth2.googleapis.com/token', {
+        client_id: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      });
+      await this.cachesService.set('google-access', access_token, 3600);
+      return access_token;
+    } catch (error) {
+      throw error;
+    }
   }
 }

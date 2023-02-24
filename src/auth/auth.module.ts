@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import {
   AccessTokenStrategy,
+  GoogleStrategy,
   KakaoStrategy,
   NaverStrategy,
   RefreshTokenStrategy,
@@ -16,7 +17,14 @@ import {
 @Module({
   imports: [TypeOrmModule.forFeature([Member]), MembersModule, CachesModule, JwtModule],
   controllers: [AuthController],
-  providers: [AuthService, KakaoStrategy, NaverStrategy, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [
+    AuthService,
+    KakaoStrategy,
+    NaverStrategy,
+    GoogleStrategy,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

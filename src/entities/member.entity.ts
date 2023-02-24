@@ -1,7 +1,8 @@
 import { STUDENT_DEPARTMENT } from '@src/libs/constants';
 import { ROLE } from '@src/libs/constants/role';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { SongPlaylist } from './song-playlist.entity';
 
 @Entity('tb_member')
 export class Member extends BaseEntity {
@@ -77,4 +78,7 @@ export class Member extends BaseEntity {
     nullable: true,
   })
   lastLoginIp: string | null;
+
+  @OneToMany(() => SongPlaylist, (songPlaylist) => songPlaylist.member)
+  songPlaylists: SongPlaylist[];
 }
