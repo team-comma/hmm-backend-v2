@@ -68,8 +68,8 @@ export class AuthService {
     try {
       const { id, isMoreInfo, birthyear } = member;
       await this.memberRepository.update(id, { lastLoginAt: new Date(), lastLoginIp: ip });
-      const accessToken = await this.issueToken(id, true);
-      const refreshToken = await this.issueToken(id, false);
+      const { accessToken } = await this.issueToken(id, true);
+      const { refreshToken, ...refreshOption } = await this.issueToken(id, false);
 
       this.cachesService.del(id);
       this.cachesService.set(
@@ -80,10 +80,11 @@ export class AuthService {
       console.log(accessToken);
       console.log(refreshToken);
 
+      res.cookie('refresh', refreshToken, refreshOption);
       res.redirect(
         `${await this.configService.get<string>(
           'HMM_FRONT_HOST',
-        )}?accessToken=${accessToken}&refreshToken=${refreshToken}&isMoreInfo=${isMoreInfo}&isStudent=${checkIsStudent(
+        )}?accessToken=${accessToken}&isMoreInfo=${isMoreInfo}&isStudent=${checkIsStudent(
           birthyear,
         )}`,
       );
@@ -119,11 +120,20 @@ export class AuthService {
     );
 
     const token = this.jwtService.sign({ sub: id }, { secret, expiresIn });
-    return token;
+    return isAccessToken
+      ? { accessToken: token }
+      : {
+          refreshToken: token,
+          domain: this.configService.get<string>('DOMAIN'),
+          path: '/',
+          httpOnly: true,
+          secure: this.configService.get<string>('ENV_NAME') !== 'local' ? true : false,
+          maxAge: expiresIn * 1000,
+        };
   }
 
   public async reissueAccessTokenByRefreshToken(memberId: string) {
-    const accessToken = this.issueToken(memberId, true);
+    const { accessToken } = this.issueToken(memberId, true);
     return accessToken;
   }
 
